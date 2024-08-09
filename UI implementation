@@ -1,0 +1,123 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'models/reminder.dart';
+import 'providers/reminder_provider.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => ReminderProvider(),
+      child: MaterialApp(
+        home: ReminderPage(),
+      ),
+    );
+  }
+}
+
+class ReminderPage extends StatefulWidget {
+  @override
+  _ReminderPageState createState() => _ReminderPageState();
+}
+
+class _ReminderPageState extends State<ReminderPage> {
+  String? _selectedDay;
+  TimeOfDay? _selectedTime;
+  String? _selectedActivity;
+
+  final List<String> daysOfWeek = [
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+  ];
+
+  final List<String> activities = [
+    'Wake up', 'Go to gym', 'Breakfast', 'Meetings', 'Lunch', 
+    'Quick nap', 'Go to library', 'Dinner', 'Go to sleep'
+  ];
+
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  @override
+  void initState() {
+    super.initState();
+    var initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> _scheduleNotification(TimeOfDay time, String activity) async {
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'reminder_channel',
+      'Reminder Channel',
+      'Channel for reminder notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+    var platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      0,
+      'Reminder',
+      'It\'s time to $activity',
+      _convertTime(time),
+      platformChannelSpecifics,
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  tz.TZDateTime _convertTime(TimeOfDay time) {
+    final now = tz.TZDateTime.now(tz.local);
+    return tz.TZDateTime(tz.local, now.year, now.month, now.day, time.hour, time.minute);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Reminder App')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(labelText: 'Day of the week'),
+              value: _selectedDay,
+              items: daysOfWeek.map((day) {
+                return DropdownMenuItem(
+                  value: day,
+                  child: Text(day),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedDay = value;
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                TimeOfDay? picked = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.now(),
+                );
+                if (picked != null) {
+                  setState(() {
+                    _selectedTime = picked;
+                  });
+                }
+              },
+              child: Text(_selectedTime == null
+                  ? 'Choose Time'
+                  : 'Selected Time: ${_selectedTime!.format(context)}'),
+      …
