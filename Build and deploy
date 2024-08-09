@@ -1,0 +1,3 @@
+Once the app is ready, you can build and deploy it to andriod or IOS following flutter's guidlines.
+
+This code sets up the UI and logic to handle reminders as specified in your task, using drop-down lists to choose days, times, and activities and then seting up notifications to alert the user when the activity is due.
