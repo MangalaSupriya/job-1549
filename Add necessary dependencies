@@ -1,0 +1,5 @@
+dependencies:
+  flutter:
+    sdk: flutter
+provider: ^6.0.3
+flutter_local_notifications: ^12.0.4
